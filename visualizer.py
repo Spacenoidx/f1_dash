@@ -1,0 +1,66 @@
+import streamlit as st
+import pandas as pd
+from processor import get_season_events
+import datetime
+
+def main():
+    st.title("Formula 1 Season Events Visualizer")
+    
+    year = st.number_input("Enter the year of the season you want to visualize:", min_value=1950, max_value=datetime.datetime.now().year, value=2023)
+    
+    events = None
+    if st.button("Get Season Events"):
+        events = get_season_events(year)
+        st.session_state.events = events
+        st.session_state.current_year = year
+    elif 'events' in st.session_state and st.session_state.get('current_year') == year:
+        events = st.session_state.events
+    
+    if events is not None:
+        st.subheader(f"Events for the {year} Formula 1 World Championship:")
+        #Convert column names to more readable format
+        display_events = events.copy()
+        display_events.columns = [col.replace('_', ' ').title() for col in display_events.columns]
+        #Titlize the meeting names
+        display_events['Meeting Official Name'] = display_events['Meeting Official Name'].str.title()
+        #correct indexing to start from 1 instead of 0
+        display_events.index = display_events.index + 1
+        #give index a name
+        display_events.index.name = 'Event Number'
+        
+        # Display dataframe
+        st.dataframe(display_events)
+        
+        # Add selectbox for meeting selection
+        meeting_options = display_events['Meeting Name'].tolist()
+        selected_meeting = st.selectbox("Select a Meeting to get its Key:", meeting_options, key='meeting_selector')
+        
+        if selected_meeting:
+            # Find the index of the selected meeting
+            selected_index = meeting_options.index(selected_meeting)
+            
+            # Get the original events to access meeting_key
+            original_events = events  # Use the stored events
+            meeting_key = original_events.iloc[selected_index]['meeting_key']
+            
+            # Store in session_state
+            st.session_state.selected_meeting_key = meeting_key
+            st.session_state.selected_meeting_name = selected_meeting
+            st.success(f"Selected Meeting Key: {meeting_key} for {selected_meeting}")
+            
+            
+
+            
+# def meeting_data():
+#     if 'selected_meeting_key' in st.session_state:
+#         meeting_key = st.session_state.selected_meeting_key
+#         # Here you can use the meeting_key to fetch more data about the selected meeting
+#         # For example, you could call another function that gets detailed information about the meeting
+#         st.write(f"Fetching data for meeting key: {meeting_key}")
+#     else:
+#         st.warning("Please select a meeting first to see its details.")
+
+if __name__ == "__main__":
+    main()
+
+

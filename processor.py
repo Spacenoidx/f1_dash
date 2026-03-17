@@ -25,6 +25,11 @@ def get_season_events(year):
         events_table = events_table[events_table['meeting_name'] != 'Pre-Season Testing']
         events_table.reset_index(drop=True, inplace=True)
         return events_table
+
+def get_meeting_data(meeting_key):
+    response = urlopen(f'https://api.openf1.org/v1/meetings?meeting_key={meeting_key}')
+    data = json.loads(response.read().decode('utf-8'))
+    return data
             
 if __name__ == "__main__":
     year = datetime.datetime.now().year - 1           
@@ -34,3 +39,4 @@ if __name__ == "__main__":
 # If you want, you can import the results in a DataFrame (you need to install the `pandas` package first)
 # import pandas as pd
 # df = pd.DataFrame(data)
+

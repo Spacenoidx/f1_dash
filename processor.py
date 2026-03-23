@@ -27,9 +27,23 @@ def get_season_events(year):
         return events_table
 
 def get_meeting_data(meeting_key):
-    response = urlopen(f'https://api.openf1.org/v1/meetings?meeting_key={meeting_key}')
+    response = urlopen(f'https://api.openf1.org/v1/sessions?meeting_key={meeting_key}')
     data = json.loads(response.read().decode('utf-8'))
     return data
+
+def get_selected_session_data(session_key):
+    response = urlopen(f'https://api.openf1.org/v1/sessions?session_key={session_key}')
+    data = json.loads(response.read().decode('utf-8'))
+    return data
+
+def get_session_results(session_key):
+    response = urlopen(f'https://api.openf1.org/v1/session_result?session_key={session_key}')
+    session_data = json.loads(response.read().decode('utf-8'))
+    # Process session_data to extract results and display them as needed
+    # This is a placeholder for your actual implementation
+    return session_data
+    
+    
             
 if __name__ == "__main__":
     year = datetime.datetime.now().year - 1           

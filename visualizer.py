@@ -1,13 +1,16 @@
 import streamlit as st
 import pandas as pd
-from processor import get_season_events, get_meeting_data
+from processor import get_season_events, get_meeting_data, get_selected_session_data, get_session_results
 import datetime
 
 def display_meeting_results(meeting_key, year, meeting_name):
     """Display results/visualization for the selected meeting"""
     st.subheader(f"Results for {year} {meeting_name}")
     
+    
+    
     # TODO: Fetch and display results data based on meeting_key
+    
     
     meeting_data = get_meeting_data(meeting_key)  # This will return the meeting data, you can process it to extract results
     st.dataframe(meeting_data)  # Display the raw meeting data for now, you can customize this to show specific results
@@ -18,6 +21,9 @@ def display_meeting_results(meeting_key, year, meeting_name):
     # st.bar_chart(results)
     
     st.info(f"Displaying results for meeting key: {meeting_key}")
+    
+
+    
 
 def main():
     st.title("Formula 1 Season Events Visualizer")
@@ -33,6 +39,25 @@ def main():
             st.session_state.selected_year,
             st.session_state.selected_meeting_name
         )
+        return
+    
+    # check if viewing session data
+    if st.session_state.get('viewing_session', False):
+        if st.button("← Back to Events"):
+            st.session_state.viewing_session = False
+            st.rerun()
+        
+        selected_session_name = st.session_state.get('session_selector')
+        sessions_data = get_meeting_data(st.session_state.selected_meeting_key)
+        selected_session = next((session for session in sessions_data if session['session_name'] == selected_session_name), None)
+        if selected_session:
+            session_key = selected_session['session_key']
+            session_results_data = get_session_results(session_key)
+            st.write(f"Data for session: {selected_session_name} of {st.session_state.selected_year} {st.session_state.selected_meeting_name}")
+            st.dataframe(session_results_data)  # Display the raw session data for now, you can customize this to show specific results
+        else:
+            st.warning("Selected session data not found.")
+        
         return
     
     # Show events list
@@ -83,17 +108,33 @@ def main():
             st.session_state.selected_year = year
             st.success(f"Selected Meeting Key: *{meeting_key}* for **{year} {selected_meeting}**", icon="✅")
             
-            # Add button to display results only after a meeting is selected
+            sessions_data = get_meeting_data(meeting_key)
+            st.write("Sessions Data:")
+            st.selectbox("Select a Session to view details:", options=[session['session_name'] for session in sessions_data], key='session_selector')    
+                    # Add button to display results only after a meeting is selected
             if meeting_key:
-                if st.button("View Meeting Results"):
-                    st.session_state.viewing_results = True
+                if st.button("Get Session Data"):
+                    st.session_state.viewing_session = True
                     st.rerun()
+                    
+            if st.session_state.get('viewing_session', False):
+                selected_session_name = st.session_state.get('session_selector')
+                selected_session = next((session for session in sessions_data if session['session_name'] == selected_session_name), None)
+                if selected_session:
+                    session_key = selected_session['session_key']
+                    session_data = get_selected_session_data(session_key)
+                    st.write(f"Data for session: {selected_session_name}")
+                    st.dataframe(session_data)  # Display the raw session data for now, you can customize this to show specific results
+            
+            
         
         # Display results if already selected (on reruns)
             elif 'selected_meeting_key' in st.session_state:
                 if st.button("View Meeting Results"):
-                    st.session_state.viewing_results = True
+                    st.session_state.viewing_session = True
                     st.rerun()
+                    
+    
             
             
             
